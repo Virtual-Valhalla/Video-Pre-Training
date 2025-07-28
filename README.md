@@ -1,12 +1,80 @@
 
 
-# Video-Pre-Training
-Preentrenamiento de Video (VPT): Aprendiendo a actuar observando videos en línea sin etiquetar
 
-> :page_facing_up: [Leer el artículo](https://cdn.openai.com/vpt/Paper.pdf) \
-  :mega: [Entrada de blog](https://openai.com/blog/vpt) \
-  :space_invader: [Entorno MineRL](https://github.com/minerllabs/minerl) (nota: se requiere versión 1.0+) \
-  :checkered_flag: [Competencia MineRL BASALT](https://www.aicrowd.com/challenges/neurips-2022-minerl-basalt-competition)
+# Video-Pre-Training para Juegos de Carreras de Coches
+Preentrenamiento de Video (VPT): Aprendiendo a conducir observando videos de carreras sin etiquetar
+
+> :page_facing_up: [Paper original VPT](https://cdn.openai.com/vpt/Paper.pdf) \
+  :mega: [Blog OpenAI](https://openai.com/blog/vpt)
+
+
+# Ejecución de modelos de agente en juegos de carreras
+
+Instala los prerrequisitos para el entorno de simulación de carreras que vayas a utilizar (por ejemplo, [CARLA](https://carla.org/), [TORCS](https://sourceforge.net/projects/torcs/), [Gym](https://www.gymlibrary.dev/), etc.).
+Luego instala los requisitos del repositorio con:
+
+```
+pip install -r requirements.txt
+```
+
+> ⚠️ Nota: Asegúrate de que la versión de PyTorch y las dependencias sean compatibles con tu entorno y hardware.
+
+Para ejecutar el código, usa:
+
+```
+python run_agent.py --model [ruta al archivo .model] --weights [ruta al archivo .weight] --env [nombre_del_entorno]
+```
+
+Después de cargar, deberías ver una ventana o consola con el agente conduciendo en el simulador de carreras seleccionado.
+
+
+# Modelos y Pesos de Agente
+Incluye aquí los enlaces a los modelos y pesos preentrenados para juegos de carreras (puedes añadir tus propios modelos o enlaces a modelos públicos de referencia):
+
+* [:arrow_down: Modelo base de carreras]([enlace_a_modelo])
+* [:arrow_down: Pesos base de carreras]([enlace_a_pesos])
+
+### Ejemplo de formato de datos
+Cada episodio debe estar compuesto por un video (o secuencia de imágenes) y un archivo `.jsonl` con las acciones y observaciones:
+
+```json
+{
+  "frame": 1234,
+  "timestamp": 12.34,
+  "observation": {
+    "image": "frame_1234.png",
+    "speed": 87.2,
+    "track_position": 0.12,
+    "gear": 3
+  },
+  "action": {
+    "steering": -0.15,
+    "throttle": 0.8,
+    "brake": 0.0,
+    "gear_change": 0
+  }
+}
+```
+
+# Entrenamiento y Fine-tuning
+
+Para realizar fine-tuning de un modelo en tus propios datos de carreras:
+
+```
+python behavioural_cloning.py --data-dir data --in-model modelo-carreras.model --in-weights modelo-carreras.weights --out-weights finetuned-carreras.weights
+```
+
+Puedes modificar los hiperparámetros y la arquitectura en la parte superior de `behavioural_cloning.py`.
+
+# Consideraciones y Adaptaciones
+
+- Asegúrate de adaptar el espacio de acciones y observaciones en `agent.py` y `lib/actions.py` para reflejar los controles de un coche de carreras (dirección, acelerador, freno, marcha, etc.).
+- El preprocesamiento de imágenes y señales debe ajustarse a la resolución y sensores del simulador.
+- Si usas un entorno diferente a los soportados originalmente, adapta las interfaces de entorno y carga de datos.
+- Consulta el archivo `CONTEXT.md` para una guía detallada de los cambios necesarios.
+
+# Créditos y Referencias
+Este repositorio es una adaptación del enfoque VPT de OpenAI, orientado a juegos de carreras de coches. Consulta el [paper original](https://cdn.openai.com/vpt/Paper.pdf) para detalles teóricos y experimentales.
 
 
 # Ejecución de modelos de agente
