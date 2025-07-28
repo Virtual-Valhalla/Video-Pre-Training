@@ -45,20 +45,21 @@ class ScreenCaptureWidget(QWidget):
         self.timer.start(50)  # 20 fps aprox
 
 
-        # Carga tu modelo PyTorch aquí (ajusta la ruta y clase según tu caso)
-        import torch
-        from torchvision import transforms
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # Cambia la ruta y la clase del modelo según tu entrenamiento
-        self.modelo = torch.load('modelo_vpt_coche.pt', map_location=self.device)
-        self.modelo.eval()
-        # Preprocesado estándar (ajusta tamaño y normalización según tu modelo)
-        self.preprocess = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        # Solo cargar el modelo si no estamos en modo dataset collector
+        if not getattr(self, 'skip_model_load', False):
+            import torch
+            from torchvision import transforms
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            # Cambia la ruta y la clase del modelo según tu entrenamiento
+            self.modelo = torch.load('modelo_vpt_coche.pt', map_location=self.device)
+            self.modelo.eval()
+            # Preprocesado estándar (ajusta tamaño y normalización según tu modelo)
+            self.preprocess = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
 
     def update_pilot(self, is_racing):
         # Dibuja un círculo verde o rojo
@@ -114,9 +115,64 @@ class ScreenCaptureWidget(QWidget):
         else:
             self.data_label.setText('No es un juego de coches')
 
+
+# --- Dataset Collector ---
+import os
+from PyQt5.QtWidgets import QMessageBox
+from datetime import datetime
+
+class DatasetCollector(ScreenCaptureWidget):
+    def __init__(self, save_dir='data/train'):
+        self.skip_model_load = True
+        super().__init__()
+        self.save_dir = save_dir
+        self.setWindowTitle('Dataset Collector - Captura y clasifica imágenes')
+        self.data_label.setText('Pulsa 0 (no coche) o 1 (coche) para guardar la imagen')
+        self.captura_actual = None
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_0:
+            self.save_capture(0)
+        elif key == Qt.Key_1:
+            self.save_capture(1)
+        elif key == Qt.Key_Escape:
+            self.close()
+
+    def capture_screen(self):
+        mon = self.monitors[self.selected_monitor]
+        img = np.array(self.sct.grab(mon))
+        img = img[..., :3]  # BGR
+        h, w, ch = img.shape
+        bytes_per_line = ch * w
+        qimg = QImage(img.tobytes(), w, h, bytes_per_line, QImage.Format_BGR888)
+        pixmap = QPixmap.fromImage(qimg)
+        self.label.setPixmap(pixmap.scaled(self.label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.captura_actual = img
+
+    def save_capture(self, clase):
+        if self.captura_actual is None:
+            return
+        folder = os.path.join(self.save_dir, str(clase))
+        os.makedirs(folder, exist_ok=True)
+        fname = datetime.now().strftime('%Y%m%d_%H%M%S_%f') + '.png'
+        fpath = os.path.join(folder, fname)
+        import cv2
+        cv2.imwrite(fpath, self.captura_actual)
+        self.data_label.setText(f'Guardada en {fpath}')
+
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--collect', action='store_true', help='Modo recolección de dataset')
+    parser.add_argument('--save-dir', type=str, default='data/train', help='Directorio para guardar capturas')
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
-    win = ScreenCaptureWidget()
+    if args.collect:
+        win = DatasetCollector(save_dir=args.save_dir)
+    else:
+        win = ScreenCaptureWidget()
     win.resize(800, 600)
     win.show()
     sys.exit(app.exec_())
