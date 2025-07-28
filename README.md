@@ -1,46 +1,45 @@
 
 
 # Video-Pre-Training
-Video PreTraining (VPT): Learning to Act by Watching Unlabeled Online Videos
+Preentrenamiento de Video (VPT): Aprendiendo a actuar observando videos en línea sin etiquetar
+
+> :page_facing_up: [Leer el artículo](https://cdn.openai.com/vpt/Paper.pdf) \
+  :mega: [Entrada de blog](https://openai.com/blog/vpt) \
+  :space_invader: [Entorno MineRL](https://github.com/minerllabs/minerl) (nota: se requiere versión 1.0+) \
+  :checkered_flag: [Competencia MineRL BASALT](https://www.aicrowd.com/challenges/neurips-2022-minerl-basalt-competition)
 
 
-> :page_facing_up: [Read Paper](https://cdn.openai.com/vpt/Paper.pdf) \
-  :mega: [Blog Post](https://openai.com/blog/vpt) \
-  :space_invader: [MineRL Environment](https://github.com/minerllabs/minerl) (note version 1.0+ required) \
-  :checkered_flag: [MineRL BASALT Competition](https://www.aicrowd.com/challenges/neurips-2022-minerl-basalt-competition)
+# Ejecución de modelos de agente
 
-
-# Running agent models
-
-Install pre-requirements for [MineRL](https://minerl.readthedocs.io/en/latest/tutorials/index.html).
-Then install requirements with:
+Instala los prerrequisitos para [MineRL](https://minerl.readthedocs.io/en/latest/tutorials/index.html).
+Luego instala los requisitos con:
 
 ```
 pip install git+https://github.com/minerllabs/minerl
 pip install -r requirements.txt
 ```
 
-> ⚠️ Note: For reproducibility reasons, the PyTorch version is pinned as `torch==1.9.0`, which is incompatible with Python 3.10 or higher versions. If you are using Python 3.10 or higher, install a [newer version of PyTorch](https://pytorch.org/get-started/locally/) (usually, `pip install torch`). However, note that this *might* subtly change model behaviour (e.g., still act mostly as expected, but not reaching the reported performance).
+> ⚠️ Nota: Por razones de reproducibilidad, la versión de PyTorch está fijada en `torch==1.9.0`, la cual es incompatible con Python 3.10 o superior. Si usas Python 3.10 o superior, instala una [versión más reciente de PyTorch](https://pytorch.org/get-started/locally/) (usualmente, `pip install torch`). Sin embargo, ten en cuenta que esto *podría* cambiar sutilmente el comportamiento del modelo (por ejemplo, seguirá funcionando pero puede que no alcance el rendimiento reportado).
 
-To run the code, call
+Para ejecutar el código, usa
 
 ```
-python run_agent.py --model [path to .model file] --weights [path to .weight file]
+python run_agent.py --model [ruta al archivo .model] --weights [ruta al archivo .weight]
 ```
 
-After loading up, you should see a window of the agent playing Minecraft.
+Después de cargar, deberías ver una ventana con el agente jugando Minecraft.
 
 
 
-# Agent Model Zoo
-Below are the model files and weights files for various pre-trained Minecraft models.
-The 1x, 2x and 3x model files correspond to their respective model weights width.
+# Zoológico de Modelos de Agente
+A continuación se encuentran los archivos de modelo y pesos para varios modelos de Minecraft preentrenados.
+Los archivos de modelo 1x, 2x y 3x corresponden a su respectivo ancho de pesos.
 
-* [:arrow_down: 1x Model](https://openaipublic.blob.core.windows.net/minecraft-rl/models/foundation-model-1x.model)
-* [:arrow_down: 2x Model](https://openaipublic.blob.core.windows.net/minecraft-rl/models/2x.model)
-* [:arrow_down: 3x Model](https://openaipublic.blob.core.windows.net/minecraft-rl/models/foundation-model-3x.model)
+* [:arrow_down: Modelo 1x](https://openaipublic.blob.core.windows.net/minecraft-rl/models/foundation-model-1x.model)
+* [:arrow_down: Modelo 2x](https://openaipublic.blob.core.windows.net/minecraft-rl/models/2x.model)
+* [:arrow_down: Modelo 3x](https://openaipublic.blob.core.windows.net/minecraft-rl/models/foundation-model-3x.model)
 
-### Demonstration Only - Behavioral Cloning
+### Solo Demostración - Clonación de Comportamiento
 These models are trained on video demonstrations of humans playing Minecraft
 using behavioral cloning (BC) and are more general than later models which
 use reinforcement learning (RL) to further optimize the policy.
