@@ -44,10 +44,21 @@ class ScreenCaptureWidget(QWidget):
         self.timer.timeout.connect(self.capture_screen)
         self.timer.start(50)  # 20 fps aprox
 
-        # Simulación de detección de juego de coches (alternar cada 2 seg)
-        self.detect_timer = QTimer()
-        self.detect_timer.timeout.connect(self.simulate_detection)
-        self.detect_timer.start(2000)
+
+        # Carga tu modelo PyTorch aquí (ajusta la ruta y clase según tu caso)
+        import torch
+        from torchvision import transforms
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # Cambia la ruta y la clase del modelo según tu entrenamiento
+        self.modelo = torch.load('modelo_vpt_coche.pt', map_location=self.device)
+        self.modelo.eval()
+        # Preprocesado estándar (ajusta tamaño y normalización según tu modelo)
+        self.preprocess = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
 
     def update_pilot(self, is_racing):
         # Dibuja un círculo verde o rojo
@@ -63,14 +74,24 @@ class ScreenCaptureWidget(QWidget):
         painter.end()
         self.pilot_label.setPixmap(pixmap)
 
-    def simulate_detection(self):
-        # Simula la detección alternando el estado
-        self.is_racing_game = not self.is_racing_game
-        self.update_pilot(self.is_racing_game)
-        if self.is_racing_game:
-            self.data_label.setText('Juego de coches detectado')
-        else:
-            self.data_label.setText('No es un juego de coches')
+
+    def es_juego_de_coches(self, img):
+        # img: numpy array (H, W, 3) en BGR
+        import torch
+        # Convertir BGR a RGB
+        img_rgb = img[..., ::-1]
+        # Preprocesar
+        input_tensor = self.preprocess(img_rgb)
+        input_tensor = input_tensor.unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            output = self.modelo(input_tensor)
+            # Si el modelo devuelve logits, aplicar sigmoid/softmax según corresponda
+            if output.shape[-1] == 1:
+                prob = torch.sigmoid(output).item()
+                return prob > 0.5
+            else:
+                prob = torch.softmax(output, dim=1)[0,1].item()
+                return prob > 0.5
 
     def update_monitor(self, idx):
         self.selected_monitor = idx
@@ -84,6 +105,14 @@ class ScreenCaptureWidget(QWidget):
         qimg = QImage(img.tobytes(), w, h, bytes_per_line, QImage.Format_BGR888)
         pixmap = QPixmap.fromImage(qimg)
         self.label.setPixmap(pixmap.scaled(self.label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        # --- Detección IA en tiempo real ---
+        es_coche = self.es_juego_de_coches(img)
+        self.update_pilot(es_coche)
+        if es_coche:
+            self.data_label.setText('Juego de coches detectado')
+        else:
+            self.data_label.setText('No es un juego de coches')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
