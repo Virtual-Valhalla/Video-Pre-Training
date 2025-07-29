@@ -129,6 +129,8 @@ class DatasetCollector(ScreenCaptureWidget):
         self.setWindowTitle('Dataset Collector - Captura y clasifica imágenes')
         self.data_label.setText('Pulsa 0 (no coche) o 1 (coche) para guardar la imagen')
         self.captura_actual = None
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocus()
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -138,6 +140,8 @@ class DatasetCollector(ScreenCaptureWidget):
             self.save_capture(1)
         elif key == Qt.Key_Escape:
             self.close()
+        else:
+            super().keyPressEvent(event)
 
     def capture_screen(self):
         mon = self.monitors[self.selected_monitor]
